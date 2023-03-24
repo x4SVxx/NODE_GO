@@ -1,8 +1,11 @@
 {
-	"server_ip": "10.3.168.153",
-	"server_ip1": "127.0.0.1",
+	"server_ip1": "10.3.168.153",
+	"server_ip": "127.0.0.1",
 	"server_port": "9000",
 	"login": "TestOrg",
 	"password": "TestOrgPass",
-	"roomid": "1"
+	"roomid": "1",
+
+	"independent_flag": "true",
+	"connect_math_flag": "true"
 }
