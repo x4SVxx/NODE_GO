@@ -20,8 +20,13 @@ func GenerateApikey() string {
 	return string(apikey)
 }
 
-func Receiver(math_connection *websocket.Conn, chan_math_connection chan *websocket.Conn, server_connection *websocket.Conn) {
+func Receiver(client_connections *[]*websocket.Conn, math_connection *websocket.Conn, chan_math_connection chan *websocket.Conn, server_connection *websocket.Conn) {
 	apikey := ""
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Error: SERVER FOR MATH RECEIVE -", err)
+		}
+	}()
 	for {
 		_, message_from_math, err := math_connection.ReadMessage()
 		if err != nil {
@@ -41,19 +46,28 @@ func Receiver(math_connection *websocket.Conn, chan_math_connection chan *websoc
 		} else if message_map["apikey"] == apikey && server_connection != nil {
 			json_message, _ := json.Marshal(message_map)
 			server_connection.WriteMessage(websocket.TextMessage, json_message)
+		} else if message_map["action"] == "ECHO" {
+			for i := 0; i < len(*client_connections); i++ {
+				if (*client_connections)[i] != math_connection {
+					json_message, _ := json.Marshal(message_map)
+					(*client_connections)[i].WriteMessage(websocket.TextMessage, json_message)
+				}
+			}
 		}
 	}
 }
 
 func StartServer(chan_math_connection chan *websocket.Conn, server_connection *websocket.Conn) {
 	var upgrader = websocket.Upgrader{}
+	var connections []*websocket.Conn
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		math_connection, err := upgrader.Upgrade(w, r, nil)
+		connection, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
 			fmt.Println(err)
 		}
 		fmt.Println("New websocket connection")
-		go Receiver(math_connection, chan_math_connection, server_connection)
+		connections = append(connections, connection)
+		go Receiver(&connections, connection, chan_math_connection, server_connection)
 	})
 	http.ListenAndServe("localhost:8000", nil)
 }

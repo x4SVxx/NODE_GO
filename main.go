@@ -54,7 +54,6 @@ func main() {
 		go ServerForMath.StartServer(chan_math_connection, server_connection)
 		math_connection := <-chan_math_connection
 		close(chan_math_connection)
-		print(math_connection)
 
 		var config []map[string]interface{}
 		config_file, _ := os.ReadFile("Config.json")
