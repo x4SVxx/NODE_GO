@@ -43,7 +43,7 @@ class Anchor():
         self.current_ref_tag_slave_rx = []
         self.true_tdoa_to_ref_tag = []
 
-    def relate_to_master(self, anchors, cfg):
+    def relate_to_master(self, anchors, cfg, use_ref_tag, ref_tag):
         for master in anchors:
             if master.number == self.master_number:
                 self.master_ID = master.ID
@@ -53,8 +53,8 @@ class Anchor():
                 self.master = master
                 self.log_message(f"Anchor {self.number} has been related to {self.master.number}")
 
-                if cfg.use_ref_tag and cfg.ref_tag:
-                    self.calculate_true_tdoa_to_ref_tag()
+                if use_ref_tag and ref_tag:
+                    self.calculate_true_tdoa_to_ref_tag(ref_tag)
 
         if self.master_ID == [] and self.Role == "Master":
             self.sync_flag = 1
@@ -99,7 +99,6 @@ class Anchor():
                     self.sync_flag = 0
                     self.k_skip = 0
                     self.log_message("Sync lost: " + str(self.number))
-                    self.data2sendflag = 1
         else:
             if len(self.tx) == self.startnumber:
                 del self.tx[0]
@@ -125,22 +124,21 @@ class Anchor():
                     self.rx = []
                     self.sync_flag = 1
                     self.log_message("Synchronized: " + str(self.number))
-                    self.data2sendflag = 1
         self.current_master_seq = -1
+        self.data2sendflag = 1
 
     def correct_timestamp(self, t):
         dt = (t - self.rx_last_cs)%self.T_max
         return float(t - (self.X[0] + self.X[1] * dt))
 
-    def calculate_true_tdoa_to_ref_tag(self):
+    def calculate_true_tdoa_to_ref_tag(self, ref_tag):
         master = self.master
-        cfg = self.cfg
-        range_to_master = np.sqrt(pow(master.x - cfg.ref_tag["x"], 2) +
-                                  pow(master.y - cfg.ref_tag["y"], 2) +
-                                  pow(master.z - cfg.ref_tag["h"], 2)) / self.c
-        range_to_slave = np.sqrt(pow(self.x - cfg.ref_tag["x"], 2) +
-                                 pow(self.y - cfg.ref_tag["y"], 2) +
-                                 pow(self.z - cfg.ref_tag["h"], 2)) / self.c
+        range_to_master = np.sqrt(pow(master.x - ref_tag["x"], 2) +
+                                  pow(master.y - ref_tag["y"], 2) +
+                                  pow(master.z - ref_tag["h"], 2)) / self.c
+        range_to_slave = np.sqrt(pow(self.x - ref_tag["x"], 2) +
+                                 pow(self.y - ref_tag["y"], 2) +
+                                 pow(self.z - ref_tag["h"], 2)) / self.c
         self.true_tdoa_to_ref_tag = range_to_slave - range_to_master
 
     def add_master_ref_tag(self, msg):
@@ -165,6 +163,7 @@ class Anchor():
         # self.ref_tag_tdoa.append((self.current_ref_tag_slave_rx - self.current_ref_tag_master_rx)%self.T_max)
         self.ref_tag_tdoa.append((self.current_ref_tag_slave_rx)%self.T_max - self.current_ref_tag_master_rx)
         if len(self.ref_tag_tdoa) == 10:
+            print(self.true_tdoa_to_ref_tag)
             filtred_tdoa = cl.medfilt1(self.ref_tag_tdoa)
             mean_tdoa = 0
             for tdoa in filtred_tdoa:

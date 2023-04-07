@@ -13,7 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func ReadAndSetConfig() (string, string, string, string, string, string, string) {
+func ReadAndSetConfig() (string, string, string, string, string, string, string, map[string]interface{}) {
 	var node_config map[string]interface{}
 	file, _ := os.ReadFile("NodeConfig.json")
 	defer func() {
@@ -30,6 +30,7 @@ func ReadAndSetConfig() (string, string, string, string, string, string, string)
 	roomid := node_config["roomid"].(string)
 	independent_flag := node_config["independent_flag"].(string)
 	connect_math_flag := node_config["connect_math_flag"].(string)
+	ref_tag_config := node_config["ref_tag"].(map[string]interface{})
 
 	if len(strings.TrimSpace(server_ip)) == 0 || len(strings.TrimSpace(server_port)) == 0 || len(strings.TrimSpace(login)) == 0 || len(strings.TrimSpace(password)) == 0 || len(strings.TrimSpace(roomid)) == 0 || len(strings.TrimSpace(independent_flag)) == 0 || len(strings.TrimSpace(connect_math_flag)) == 0 {
 		fmt.Println("Error: ReadAndSetConfig - empty data in node config")
@@ -37,12 +38,13 @@ func ReadAndSetConfig() (string, string, string, string, string, string, string)
 	} else {
 		fmt.Println("Success: ReadAndSetConfig \n"+"server_ip:", server_ip, "\n"+"server_port:", server_port, "\n"+"login:", login, "\n"+"password:", password, "\n"+"roomid:", roomid, "\n"+"independent_flag:", independent_flag)
 	}
-	return server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag
+	return server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag, ref_tag_config
 }
 
 func main() {
 	var server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag string
-	server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag = ReadAndSetConfig()
+	var ref_tag_cofig map[string]interface{}
+	server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag, ref_tag_cofig = ReadAndSetConfig()
 	var apikey, clientid, name, roomname string
 	var login_flag, config_flag, rf_config_flag, start_spam_flag, stop_spam_flag bool = false, false, false, false, false
 	var anchors_array []map[string]interface{}
@@ -58,6 +60,7 @@ func main() {
 		var config []map[string]interface{}
 		config_file, _ := os.ReadFile("Config.json")
 		json.Unmarshal(config_file, &config)
+
 		for i := 0; i < len(config); i++ {
 			anchor := map[string]interface{}{}
 			anchor["ip"] = config[i]["ip"].(string)
@@ -72,7 +75,7 @@ func main() {
 			anchor["z"] = config[i]["z"].(float64)
 			Anchor.Connect(&anchor, &anchors_array)
 		}
-		MessageToMath(math_connection, map[string]interface{}{"action": "RoomConfig", "data": map[string]interface{}{"clientid": "clientid", "organization": "clientid", "roomid": "roomid", "roomname": "roomname", "anchors": anchors_array}})
+		MessageToMath(math_connection, map[string]interface{}{"action": "RoomConfig", "data": map[string]interface{}{"clientid": "clientid", "organization": "clientid", "roomid": "roomid", "roomname": "roomname", "anchors": anchors_array, "ref_tag_config": ref_tag_cofig}})
 
 		var rf_config []map[string]interface{}
 		rf_config_file, _ := os.ReadFile("RfConfig.json")

@@ -10,15 +10,14 @@ class Config():
         self.c = 299792458.
         # max zone
         self.zone = 1000.
+        # FNCH
+        self.alpha = 0.9
 
         # stream
         self.stream = []
         # log enable
         self.log = 0
         self.logger = []
-        # reference tag
-        self.use_ref_tag = False
-        self.ref_tag = []
 
         # accumulation params
         self.accumulation_mode = 0

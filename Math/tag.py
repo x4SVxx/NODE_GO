@@ -12,12 +12,18 @@ class Tag():
         self.measurements = []
         self.x = 0.0
         self.y = 0.0
+        self.x_f = self.x
+        self.y_f = self.y
+        self.x_f_past = self.x
+        self.y_f_past = self.y
         self.h = cle.cfg.hei
         self.DOP = 1.
         self.starttime = time.time()
         self.lasttime = time.time()
         self.lifetime = 0.
         self.state = 0
+        self.static = False
+        self.SOS = False
         self.alpha = 0.5
         self.data2sendflag = 0
         self.anchors_number_to_solve = 0
@@ -28,6 +34,19 @@ class Tag():
         self.accumulation_mode = cle.cfg.accumulation_mode
 
     def add_data(self, msg):
+        TAG_STATIC = 0x1
+        TAG_SOS = 0x8
+        
+        if msg["data"]["state"] & TAG_STATIC:
+            self.static = True
+        else:
+            self.static = False
+
+        if msg["data"]["state"] & TAG_SOS:
+            self.SOS = True
+        else:
+            self.SOS = False
+
         if time.time() - self.lasttime > 10:
             self.x_buffer = []
             self.y_buffer = []
@@ -45,7 +64,6 @@ class Tag():
             self.measurements = cl.check_PD(self.measurements, self.cfg)
             flag = cl.coords_calc_2D(self)
             if flag:
-                # self.data2send = f"{self.name}\t{round(self.x, 2)}\t{round(self.y, 2)}\t{len(self.measurements)}"
                 if self.accumulation_mode:
                     if time.time() - self.lasttime > 1:
                         self.data2sendflag = 1

@@ -30,6 +30,8 @@ func SendToMath(message map[string]interface{}, apikey string, name string, clie
 			}
 			if message["type"] == "BLINK" {
 				math_map_message["data"].(map[string]interface{})["sn"] = message["sn"]
+				math_map_message["data"].(map[string]interface{})["state"] = message["state"]
+
 			}
 			json_math_message, _ := json.Marshal(math_map_message)
 			fmt.Println(string(json_math_message))

@@ -7,5 +7,8 @@
 	"roomid": "1",
 
 	"independent_flag": "true",
-	"connect_math_flag": "true"
+	"connect_math_flag": "true",
+
+	"ref_tag": {},
+	"ref_tag1": {"name": "09bf", "x": 9.03, "y": 1.63, "h": 1.0}
 }
