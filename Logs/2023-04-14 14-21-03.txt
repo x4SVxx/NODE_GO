@@ -1,0 +1,8 @@
+Success: ReadAndSetConfig 
+--- server_ip: 127.0.0.1 ---
+--- server_port: 9000 ---
+--- login: TestOrg ---
+--- password: TestOrgPass ---
+--- roomid: 1 ---
+--- connect_math_flag: true ---
+--- independent_flag: true ---

@@ -2,6 +2,7 @@ package main
 
 import (
 	"NODE/Anchor"
+	"NODE/Logger"
 	"NODE/ServerForMath"
 	"encoding/json"
 	"fmt"
@@ -13,12 +14,12 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-func ReadAndSetConfig() (string, string, string, string, string, string, string, map[string]interface{}) {
+func ReadAndSetConfig() (string, string, string, string, string, string, string, string, string, map[string]interface{}) {
 	var node_config map[string]interface{}
 	file, _ := os.ReadFile("NodeConfig.json")
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Error: ReadAndSetConfig -", err)
+			Logger.Logger("Error: ReadAndSetConfig", err)
 			os.Exit(0)
 		}
 	}()
@@ -30,22 +31,39 @@ func ReadAndSetConfig() (string, string, string, string, string, string, string,
 	roomid := node_config["roomid"].(string)
 	independent_flag := node_config["independent_flag"].(string)
 	connect_math_flag := node_config["connect_math_flag"].(string)
+	node_server_ip := node_config["node_server_ip"].(string)
+	node_server_port := node_config["node_server_port"].(string)
 	ref_tag_config := node_config["ref_tag"].(map[string]interface{})
 
-	if len(strings.TrimSpace(server_ip)) == 0 || len(strings.TrimSpace(server_port)) == 0 || len(strings.TrimSpace(login)) == 0 || len(strings.TrimSpace(password)) == 0 || len(strings.TrimSpace(roomid)) == 0 || len(strings.TrimSpace(independent_flag)) == 0 || len(strings.TrimSpace(connect_math_flag)) == 0 {
-		fmt.Println("Error: ReadAndSetConfig - empty data in node config")
+	if len(strings.TrimSpace(server_ip)) == 0 ||
+		len(strings.TrimSpace(server_port)) == 0 ||
+		len(strings.TrimSpace(login)) == 0 ||
+		len(strings.TrimSpace(password)) == 0 ||
+		len(strings.TrimSpace(roomid)) == 0 ||
+		len(strings.TrimSpace(independent_flag)) == 0 ||
+		len(strings.TrimSpace(connect_math_flag)) == 0 ||
+		len(strings.TrimSpace(node_server_ip)) == 0 ||
+		len(strings.TrimSpace(node_server_port)) == 0 {
+		Logger.Logger("Error: ReadAndSetConfig - empty data in node config", nil)
 		os.Exit(0)
 	} else {
-		fmt.Println("Success: ReadAndSetConfig \n"+"server_ip:", server_ip, "\n"+"server_port:", server_port, "\n"+"login:", login, "\n"+"password:", password, "\n"+"roomid:", roomid, "\n"+"independent_flag:", independent_flag)
+		Logger.Logger("Success: ReadAndSetConfig \n"+
+			"--- server_ip: "+string(server_ip)+" ---"+"\n"+
+			"--- server_port: "+string(server_port)+" ---"+"\n"+
+			"--- login: "+string(login)+" ---"+"\n"+
+			"--- password: "+string(password)+" ---"+"\n"+
+			"--- roomid: "+string(roomid)+" ---"+"\n"+
+			"--- connect_math_flag: "+string(connect_math_flag)+" ---"+"\n"+
+			"--- independent_flag: "+string(independent_flag)+" ---", nil)
 	}
-	return server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag, ref_tag_config
+	return server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag, node_server_ip, node_server_port, ref_tag_config
 }
 
 func main() {
-	var server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag string
+	var server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag, node_server_ip, node_server_port string
 	var ref_tag_cofig map[string]interface{}
-	server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag, ref_tag_cofig = ReadAndSetConfig()
-	var apikey, clientid, name, roomname string
+	server_ip, server_port, login, password, roomid, independent_flag, connect_math_flag, node_server_ip, node_server_port, ref_tag_cofig = ReadAndSetConfig()
+	var apikey, clientid, name, roomname, organization string
 	var login_flag, config_flag, rf_config_flag, start_spam_flag, stop_spam_flag bool = false, false, false, false, false
 	var anchors_array []map[string]interface{}
 	var rf_config = map[string]interface{}{}
@@ -53,7 +71,7 @@ func main() {
 	if independent_flag == "true" {
 		var server_connection *websocket.Conn
 		chan_math_connection := make(chan *websocket.Conn)
-		go ServerForMath.StartServer(chan_math_connection, server_connection)
+		go ServerForMath.StartServer(node_server_ip, node_server_port, chan_math_connection, server_connection)
 		math_connection := <-chan_math_connection
 		close(chan_math_connection)
 
@@ -85,7 +103,7 @@ func main() {
 		}
 		for i := 0; i < len(anchors_array); i++ {
 			Anchor.StartSpam((anchors_array)[i])
-			go Anchor.Handler("apikey", "name", "clientid", "roomid", (anchors_array)[i], server_connection, math_connection)
+			go Anchor.Handler("apikey", "name", "clientid", "roomid", "organization", (anchors_array)[i], server_connection, math_connection)
 		}
 
 		for {
@@ -99,7 +117,7 @@ func main() {
 			if name == "Start" {
 				for i := 0; i < len(anchors_array); i++ {
 					Anchor.StartSpam((anchors_array)[i])
-					go Anchor.Handler("apikey", "name", "clientid", "roomid", (anchors_array)[i], server_connection, math_connection)
+					go Anchor.Handler("apikey", "name", "clientid", "roomid", "organization", (anchors_array)[i], server_connection, math_connection)
 				}
 			}
 		}
@@ -111,27 +129,26 @@ func main() {
 			func() {
 				defer func() {
 					if err := recover(); err != nil {
-						fmt.Println("Error: server connection - ", err)
+						Logger.Logger("Error: server handler", err)
 					}
 				}()
 				URL := url.URL{Scheme: "ws", Host: server_ip + ":" + server_port}
 				server_connection, _, err := websocket.DefaultDialer.Dial(URL.String(), nil)
 				if err != nil {
-					fmt.Println("Error: server connection -", err)
+					Logger.Logger("Error: server connection", err)
 				} else {
-					fmt.Println("Success: connect to the server " + server_ip + ":" + server_port)
+					Logger.Logger("Success: connect to the server "+string(server_ip)+":"+string(server_port), nil)
 
 					var math_connection *websocket.Conn
 					if connect_math_flag == "true" {
 						chan_math_connection := make(chan *websocket.Conn)
-						go ServerForMath.StartServer(chan_math_connection, server_connection)
+						go ServerForMath.StartServer(node_server_ip, node_server_port, chan_math_connection, server_connection)
 						math_connection = <-chan_math_connection
 						close(chan_math_connection)
 					}
-
 					MessageToServer(server_connection, map[string]interface{}{"action": "Login", "login": login, "password": password, "roomid": roomid})
-					break_main_receiver_point := false
 
+					break_main_receiver_point := false
 					for {
 						if break_main_receiver_point {
 							break
@@ -139,7 +156,7 @@ func main() {
 						func() {
 							defer func() {
 								if err := recover(); err != nil {
-									fmt.Println("Error: main Receiver -", err)
+									Logger.Logger("Error: main Receiver", err)
 									if err.(string) == "repeated read on failed websocket connection" {
 										break_main_receiver_point = true
 									}
@@ -147,26 +164,26 @@ func main() {
 							}()
 							_, message, err := server_connection.ReadMessage()
 							if err != nil {
-								fmt.Println("Error: message from server -", err)
+								Logger.Logger("Error: message from server", err)
 							} else {
-								fmt.Println("Success: message from server", string(message))
+								Logger.Logger("Success: message from server "+string(message), nil)
 								var message_map map[string]interface{}
 								err := json.Unmarshal(message, &message_map)
 								if err != nil {
-									fmt.Println(err)
+									Logger.Logger("Error: Unmarshal message from server", err)
 								}
 								fmt.Println(message_map["action"])
 								if message_map["action"] == "Login" && message_map["status"] == "true" {
-									Login(message_map, &apikey, &clientid, &name, &roomname, server_connection, &login_flag)
+									Login(message_map, &apikey, &clientid, &name, &roomname, &organization, server_connection, &login_flag)
 								}
 								if message_map["action"] == "SetConfig" && message_map["status"] == "true" {
-									SetConfig(message_map, &anchors_array, &rf_config, &apikey, &clientid, &roomid, &roomname, &login_flag, &config_flag, &rf_config_flag, server_connection, math_connection)
+									SetConfig(message_map, &anchors_array, &rf_config, &apikey, &clientid, &roomid, &roomname, &organization, &login_flag, &config_flag, &rf_config_flag, server_connection, math_connection)
 								}
 								if message_map["action"] == "SetRfConfig" && message_map["status"] == "true" {
 									SetRfConfig(message_map, &rf_config, &anchors_array, server_connection, &login_flag, &rf_config_flag, &config_flag)
 								}
 								if message_map["action"] == "Start" && message_map["status"] == "true" {
-									StartSpam(&apikey, &clientid, &roomid, &name, &roomname, &anchors_array, server_connection, math_connection, &start_spam_flag, &stop_spam_flag, &config_flag, &rf_config_flag)
+									StartSpam(&apikey, &clientid, &roomid, &name, &roomname, &organization, &anchors_array, server_connection, math_connection, &start_spam_flag, &stop_spam_flag, &config_flag, &rf_config_flag)
 								}
 								if message_map["action"] == "Stop" && message_map["status"] == "true" {
 									StopSpam(&anchors_array, server_connection, &stop_spam_flag, &start_spam_flag)
@@ -180,11 +197,11 @@ func main() {
 	}
 }
 
-func Login(message_map map[string]interface{}, apikey *string, clientid *string, name *string, roomname *string, server_connection *websocket.Conn, login_flag *bool) {
+func Login(message_map map[string]interface{}, apikey *string, clientid *string, name *string, roomname *string, organization *string, server_connection *websocket.Conn, login_flag *bool) {
 	defer func() {
 		if err := recover(); err != nil {
 			*login_flag = false
-			fmt.Println("Error: Login -", err)
+			Logger.Logger("Error: Login", err)
 			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: Login"})
 		}
 	}()
@@ -192,8 +209,9 @@ func Login(message_map map[string]interface{}, apikey *string, clientid *string,
 	*clientid = string(message_map["data"].(map[string]interface{})["clientid"].(string))
 	*name = string(message_map["data"].(map[string]interface{})["name"].(string))
 	*roomname = string(message_map["data"].(map[string]interface{})["roomname"].(string))
+	*organization = string(message_map["data"].(map[string]interface{})["organization"].(string))
 
-	if len(strings.TrimSpace(*apikey)) == 0 || len(strings.TrimSpace(*clientid)) == 0 || len(strings.TrimSpace(*name)) == 0 || len(strings.TrimSpace(*roomname)) == 0 {
+	if len(strings.TrimSpace(*apikey)) == 0 || len(strings.TrimSpace(*clientid)) == 0 || len(strings.TrimSpace(*name)) == 0 || len(strings.TrimSpace(*roomname)) == 0 || len(strings.TrimSpace(*organization)) == 0 {
 		MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: Login - empty data"})
 		*login_flag = false
 	} else {
@@ -202,11 +220,11 @@ func Login(message_map map[string]interface{}, apikey *string, clientid *string,
 	}
 }
 
-func SetConfig(message_map map[string]interface{}, anchors_array *[]map[string]interface{}, rf_config *map[string]interface{}, apikey *string, clientid *string, roomid *string, roomname *string, login_flag *bool, config_flag *bool, rf_config_flag *bool, server_connection *websocket.Conn, math_connection *websocket.Conn) {
+func SetConfig(message_map map[string]interface{}, anchors_array *[]map[string]interface{}, rf_config *map[string]interface{}, apikey *string, clientid *string, roomid *string, roomname *string, organization *string, login_flag *bool, config_flag *bool, rf_config_flag *bool, server_connection *websocket.Conn, math_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Error: main SetConfig -", err)
-			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: SetConfig"})
+			Logger.Logger("Error: main SetConfig", err)
+			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: main SetConfig"})
 		}
 	}()
 	if *login_flag {
@@ -250,8 +268,8 @@ func SetConfig(message_map map[string]interface{}, anchors_array *[]map[string]i
 func SetRfConfig(message_map map[string]interface{}, rf_config *map[string]interface{}, anchors_array *[]map[string]interface{}, server_connection *websocket.Conn, login_flag *bool, rf_config_flag *bool, config_flag *bool) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Error: main SetRfConfig -", err)
-			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: SetRfConfig"})
+			Logger.Logger("Error: main SetRfConfig", err)
+			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: main SetRfConfig"})
 		}
 	}()
 	if *login_flag {
@@ -275,17 +293,17 @@ func SetRfConfig(message_map map[string]interface{}, rf_config *map[string]inter
 	}
 }
 
-func StartSpam(apikey *string, clientid *string, roomid *string, name *string, roomname *string, anchors_array *[]map[string]interface{}, server_connection *websocket.Conn, math_connection *websocket.Conn, start_spam_flag *bool, stop_spam_flag *bool, config_flag *bool, rf_config_flag *bool) {
+func StartSpam(apikey *string, clientid *string, roomid *string, name *string, roomname *string, organization *string, anchors_array *[]map[string]interface{}, server_connection *websocket.Conn, math_connection *websocket.Conn, start_spam_flag *bool, stop_spam_flag *bool, config_flag *bool, rf_config_flag *bool) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Error: main StartSpam - ", err)
-			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: StartSpam"})
+			Logger.Logger("Error: main StartSpam", err)
+			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: main StartSpam"})
 		}
 	}()
 	if *config_flag && *rf_config_flag {
 		for i := 0; i < len(*anchors_array); i++ {
 			Anchor.StartSpam((*anchors_array)[i], server_connection)
-			go Anchor.Handler(*apikey, *name, *clientid, *roomid, (*anchors_array)[i], server_connection, math_connection)
+			go Anchor.Handler(*apikey, *name, *clientid, *roomid, *organization, (*anchors_array)[i], server_connection, math_connection)
 		}
 		*start_spam_flag = true
 		*stop_spam_flag = false
@@ -302,8 +320,8 @@ func StartSpam(apikey *string, clientid *string, roomid *string, name *string, r
 func StopSpam(anchors_array *[]map[string]interface{}, server_connection *websocket.Conn, stop_spam_flag *bool, start_spam_flag *bool) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Error main StopSpam - ", err)
-			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: StopSpam"})
+			Logger.Logger("Error main StopSpam", err)
+			MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: Error main StopSpam"})
 		}
 	}()
 	if *start_spam_flag {
@@ -318,21 +336,21 @@ func StopSpam(anchors_array *[]map[string]interface{}, server_connection *websoc
 func MessageToServer(server_connection *websocket.Conn, map_message map[string]interface{}) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Error: MessageToServer - ", err)
+			Logger.Logger("Error: MessageToServer", err)
 		}
 	}()
 	json_message, _ := json.Marshal(map_message)
 	server_connection.WriteMessage(websocket.TextMessage, json_message)
-	fmt.Println("Message to server: " + string(json_message))
+	Logger.Logger("Message to server: "+string(json_message), nil)
 }
 
 func MessageToMath(math_connection *websocket.Conn, map_message map[string]interface{}) {
 	defer func() {
 		if err := recover(); err != nil {
-			fmt.Println("Error: MessageToServer - ", err)
+			Logger.Logger("Error: MessageToServer", err)
 		}
 	}()
 	json_message, _ := json.Marshal(map_message)
 	math_connection.WriteMessage(websocket.TextMessage, json_message)
-	fmt.Println("Message to math: " + string(json_message))
+	Logger.Logger("Message to math: "+string(json_message), nil)
 }
