@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+
+	// "runtime"
 	"strings"
 	"time"
 )
@@ -43,6 +45,7 @@ func Logger(map_message string, err interface{}) {
 		}
 		txt_file_for_logger.WriteString(map_message + "\n")
 		fmt.Println(map_message)
+		// fmt.Println(runtime.NumGoroutine())
 		if err != nil {
 			fmt.Println(err)
 			txt_file_for_logger.WriteString(err.(error).Error() + "\n")

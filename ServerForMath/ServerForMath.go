@@ -20,16 +20,17 @@ func GenerateApikey() string {
 	return string(apikey)
 }
 
-func Receiver(client_connections *[]*websocket.Conn, connection *websocket.Conn, chan_math_connection chan *websocket.Conn, server_connection *websocket.Conn) {
+var connections []*websocket.Conn
+
+func Receiver(connection *websocket.Conn, chan_math_connection chan *websocket.Conn, server_connection *websocket.Conn) {
 	math_apikey := ""
 	for {
 		_, message, err := connection.ReadMessage()
 		if err != nil {
 			Logger.Logger("ERROR : ReadMessage from node's client", err)
-			var null_connections *websocket.Conn
-			for i := 0; i < len(*client_connections); i++ {
-				if (*client_connections)[i] == connection {
-					(*client_connections)[i] = null_connections
+			for i := 0; i < len(connections); i++ {
+				if connections[i] == connection {
+					connections[i] = nil
 				}
 			}
 			return
@@ -56,9 +57,9 @@ func Receiver(client_connections *[]*websocket.Conn, connection *websocket.Conn,
 						server_connection.WriteMessage(websocket.TextMessage, message)
 						Logger.Logger("SUCCESS : Message from math to server: "+string(message), nil)
 					}
-					for i := 0; i < len(*client_connections); i++ {
-						if (*client_connections)[i] != connection && (*client_connections)[i] != nil {
-							(*client_connections)[i].WriteMessage(websocket.TextMessage, message)
+					for i := 0; i < len(connections); i++ {
+						if connections[i] != connection && connections[i] != nil {
+							connections[i].WriteMessage(websocket.TextMessage, message)
 							Logger.Logger("SUCCESS : Message from math to client: "+string(message), nil)
 						}
 					}
@@ -70,7 +71,7 @@ func Receiver(client_connections *[]*websocket.Conn, connection *websocket.Conn,
 
 func StartServer(node_server_ip string, node_server_port string, chan_math_connection chan *websocket.Conn, server_connection *websocket.Conn) {
 	var upgrader = websocket.Upgrader{}
-	var connections []*websocket.Conn
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		connection, err := upgrader.Upgrade(w, r, nil)
 		if err != nil {
@@ -88,7 +89,7 @@ func StartServer(node_server_ip string, node_server_port string, chan_math_conne
 			Logger.Logger("SUCCESS: Message to server: "+string(json_message_for_server), nil)
 		}
 		connections = append(connections, connection)
-		go Receiver(&connections, connection, chan_math_connection, server_connection)
+		go Receiver(connection, chan_math_connection, server_connection)
 	})
 	http.ListenAndServe(node_server_ip+":"+node_server_port, nil)
 }

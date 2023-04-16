@@ -1,0 +1,41 @@
+SUCCESS : ReadAndSetNodeConfig 
+--- server_ip: 127.0.0.1 ---
+--- server_port: 9000 ---
+--- login: TestOrg ---
+--- password: TestOrgPass ---
+--- roomid: 1 ---
+--- connect_math_flag: true ---
+--- independent_flag: true ---
+--- node_server_ip: 127.0.0.1 ---
+--- node_server_port: 8000 ---
+--- log_enable_flag: true ---
+--- ref_tag_config: {} ---
+
+SUCCESS : New websocket connection for node
+SUCCESS : Message from node's client: {"action":"Login","login":"mathLogin","password":"%wPp7VO6k7ump{BP4mu2rm4w?p|J5N%P","roomid":"1"}
+Message to client: {"action":"Login","apikey":"Zghv№p№k?S5Ed=(6;hiSU7?SC-2uFF"}
+ERROR : AnchorConnect
+dial tcp 192.168.99.9:3000: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+ERROR : AnchorConnect
+dial tcp 192.168.99.12:3000: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+ERROR : AnchorConnect
+dial tcp 192.168.99.11:3000: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+ERROR : AnchorConnect
+dial tcp 192.168.99.10:3000: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+SUCCESS : main - Message to math: {"action":"RoomConfig","data":{"anchors":[{"adrx":16492,"adtx":16492,"ip":"192.168.99.9","lag":2000,"masternumber":0,"number":1,"role":"Master","x":11.4,"y":5.24,"z":2.63},{"adrx":16492,"adtx":16492,"ip":"192.168.99.12","lag":2000,"masternumber":1,"number":2,"role":"Slave","x":11.38,"y":0.47,"z":2.84},{"adrx":16492,"adtx":16492,"ip":"192.168.99.11","lag":3000,"masternumber":1,"number":3,"role":"slave","x":0.48,"y":0.47,"z":2.67},{"adrx":16492,"adtx":16492,"ip":"192.168.99.10","lag":4000,"masternumber":1,"number":4,"role":"Slave","x":0.48,"y":5.24,"z":2.62}],"clientid":"clientid","organization":"clientid","ref_tag_config":{},"roomid":"roomid","roomname":"roomname"}}
+ERROR : AnchorSetRfConfig
+interface conversion: interface is nil, not net.Conn
+ERROR : AnchorSetRfConfig
+interface conversion: interface is nil, not net.Conn
+ERROR : AnchorSetRfConfig
+interface conversion: interface is nil, not net.Conn
+ERROR : AnchorSetRfConfig
+interface conversion: interface is nil, not net.Conn
+ERROR : AnchorStartSpam
+interface conversion: interface is nil, not net.Conn
+ERROR : AnchorStartSpam
+ERROR : AnchorHandler
+interface conversion: interface is nil, not net.Conn
+ERROR : AnchorStartSpam
+ERROR : AnchorHandler
+interface conversion: interface is nil, not net.Conn

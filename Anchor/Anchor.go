@@ -78,12 +78,14 @@ func Handler(apikey string, name string, clientid string, roomid string, organiz
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
+					break_point = true
 					Logger.Logger("ERROR : AnchorHandler", err)
 					MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorHandler"}, server_connection)
-					(*anchor)["connection"].(net.Conn).Close()
-					(*anchor)["connection"] = nil
+					if (*anchor)["connection"].(net.Conn) != nil {
+						(*anchor)["connection"].(net.Conn).Close()
+						(*anchor)["connection"] = nil
+					}
 					(*anchor)["id"] = nil
-					break_point = true
 				}
 			}()
 			buffer_header := make([]byte, 3)

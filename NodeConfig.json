@@ -6,7 +6,7 @@
 	"password": "TestOrgPass",
 	"roomid": "1",
 
-	"independent_flag": "false",
+	"independent_flag": "true",
 	"connect_math_flag": "true",
 
 	"node_server_ip": "127.0.0.1",
