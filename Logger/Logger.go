@@ -11,6 +11,7 @@ import (
 var txt_file_for_logger *os.File
 var txt_file_count = 0
 var time_last_logger_file int64
+var log_enable_flag = ReadAndSetConfig()
 
 func ReadAndSetConfig() string {
 	var node_config map[string]interface{}
@@ -31,11 +32,6 @@ func ReadAndSetConfig() string {
 }
 
 func Logger(map_message string, err interface{}) {
-	defer func() {
-		txt_file_for_logger.Close()
-	}()
-
-	log_enable_flag := ReadAndSetConfig()
 	if log_enable_flag == "true" {
 		time_now := time.Now().Unix()
 		if txt_file_count == 0 || time_now-time_last_logger_file > 60*60 {
@@ -45,12 +41,11 @@ func Logger(map_message string, err interface{}) {
 			txt_file_for_logger, _ = os.Create("Logs/" + now_time_data + ".txt")
 			txt_file_count += 1
 		}
-
+		txt_file_for_logger.WriteString(map_message + "\n")
 		fmt.Println(map_message)
-		txt_file_for_logger.WriteString(map_message)
 		if err != nil {
 			fmt.Println(err)
-			txt_file_for_logger.WriteString(err.(error).Error())
+			txt_file_for_logger.WriteString(err.(error).Error() + "\n")
 		}
 	}
 	if log_enable_flag == "false" {

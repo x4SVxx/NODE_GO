@@ -6,7 +6,7 @@
 	"password": "TestOrgPass",
 	"roomid": "1",
 
-	"independent_flag": "true",
+	"independent_flag": "false",
 	"connect_math_flag": "true",
 
 	"node_server_ip": "127.0.0.1",
@@ -14,6 +14,6 @@
 
 	"log_enable_flag": "true",
 
-	"ref_tag": {},
-	"ref_tag1": {"name": "09bf", "x": 9.03, "y": 1.63, "h": 1.0}
+	"ref_tag_config": {},
+	"ref_tag_config1": {"name": "09bf", "x": 9.03, "y": 1.63, "h": 1.0}
 }

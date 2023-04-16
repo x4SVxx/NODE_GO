@@ -12,7 +12,7 @@ import (
 func SendToMath(message map[string]interface{}, apikey string, name string, clientid string, roomid string, organization string, math_connection *websocket.Conn, server_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Logger("Error: SendToMath", err)
+			Logger.Logger("ERROR : SendToMath", err)
 		}
 	}()
 	if message["type"] != "Unknow" {
@@ -69,7 +69,7 @@ func SendToMath(message map[string]interface{}, apikey string, name string, clie
 	}
 }
 
-func Handler(apikey string, name string, clientid string, roomid string, organization string, anchor map[string]interface{}, server_connection *websocket.Conn, math_connection *websocket.Conn) {
+func Handler(apikey string, name string, clientid string, roomid string, organization string, anchor *map[string]interface{}, server_connection *websocket.Conn, math_connection *websocket.Conn) {
 	break_point := false
 	for {
 		if break_point {
@@ -78,43 +78,46 @@ func Handler(apikey string, name string, clientid string, roomid string, organiz
 		func() {
 			defer func() {
 				if err := recover(); err != nil {
-					Logger.Logger("Error: AnchorHandler", err)
+					Logger.Logger("ERROR : AnchorHandler", err)
 					MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorHandler"}, server_connection)
+					(*anchor)["connection"].(net.Conn).Close()
+					(*anchor)["connection"] = nil
+					(*anchor)["id"] = nil
 					break_point = true
 				}
 			}()
 			buffer_header := make([]byte, 3)
-			anchor["connection"].(net.Conn).Read(buffer_header)
+			(*anchor)["connection"].(net.Conn).Read(buffer_header)
 			number_of_bytes := buffer_header[1]
 			buffer_anchor_message := make([]byte, number_of_bytes)
-			anchor["connection"].(net.Conn).Read(buffer_anchor_message)
+			(*anchor)["connection"].(net.Conn).Read(buffer_anchor_message)
 			buffer_ending := make([]byte, 3)
-			anchor["connection"].(net.Conn).Read(buffer_ending)
+			(*anchor)["connection"].(net.Conn).Read(buffer_ending)
 			message := ReportsAndMessages.DecodeAnchorMessage(buffer_anchor_message)
-			message["receiver"] = anchor["id"].(string)
+			message["receiver"] = (*anchor)["id"].(string)
 			if message["type"] == "CS_TX" {
 				message["sender"] = message["receiver"]
 			}
-			SendToMath(message, apikey, name, clientid, organization, roomid, math_connection, server_connection)
+			SendToMath(message, apikey, name, clientid, roomid, organization, math_connection, server_connection)
 		}()
 	}
 }
 
-func Connect(anchor *map[string]interface{}, anchors_array *[]map[string]interface{}, server_conn ...*websocket.Conn) {
-	var server_connection *websocket.Conn
-	if len(server_conn) > 0 {
-		server_connection = server_conn[0]
-	}
+func Connect(anchor *map[string]interface{}, server_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Logger("Error: AnchorConnect", err)
-			MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorConnect"}, server_connection)
+			Logger.Logger("ERROR : AnchorConnect", err)
+			if server_connection != nil {
+				MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorConnect"}, server_connection)
+			}
 		}
 	}()
 	anchor_connection, err := net.Dial("tcp", (*anchor)["ip"].(string)+":"+"3000")
 	if err != nil {
-		Logger.Logger("Error: AnchorConnect", err)
-		MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorConnect " + (*anchor)["ip"].(string)}, server_connection)
+		Logger.Logger("ERROR : AnchorConnect", err)
+		if server_connection != nil {
+			MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorConnect " + (*anchor)["ip"].(string)}, server_connection)
+		}
 	} else {
 		buffer_skip := make([]byte, 3)
 		anchor_connection.Read(buffer_skip)
@@ -122,37 +125,38 @@ func Connect(anchor *map[string]interface{}, anchors_array *[]map[string]interfa
 		anchor_connection.Read(buffer_anchor_connect)
 		(*anchor)["connection"] = anchor_connection
 		(*anchor)["id"] = ReportsAndMessages.DecodeAnchorMessage(buffer_anchor_connect)["receiver"].(string)
-		*anchors_array = append(*anchors_array, (*anchor))
-		Logger.Logger("Success: AnchorConnect "+(*anchor)["ip"].(string), nil)
-
+		Logger.Logger("SUCCESS : AnchorConnect "+(*anchor)["ip"].(string), nil)
 		json_buffer_anchor_connect, _ := json.Marshal(ReportsAndMessages.DecodeAnchorMessage(buffer_anchor_connect))
 		Logger.Logger(string(json_buffer_anchor_connect), nil)
-		MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorConnect " + (*anchor)["ip"].(string), "more": string(json_buffer_anchor_connect)}, server_connection)
+		if server_connection != nil {
+			MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorConnect " + (*anchor)["ip"].(string)}, server_connection)
+		}
 	}
 }
 
-func DisConnect(anchors_array *[]map[string]interface{}, server_conn ...*websocket.Conn) {
-	var server_connection *websocket.Conn
-	if len(server_conn) > 0 {
-		server_connection = server_conn[0]
-	}
-	for i := 0; i < len(*anchors_array); i++ {
-		(*anchors_array)[i]["connection"].(net.Conn).Close()
-		Logger.Logger("Success: AnchorDisConnect "+(*anchors_array)[i]["ip"].(string), nil)
-		MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorDisConnect " + (*anchors_array)[i]["ip"].(string)}, server_connection)
-	}
-	*anchors_array = []map[string]interface{}{}
-}
-
-func SetRfConfig(anchor map[string]interface{}, rf_config map[string]interface{}, server_conn ...*websocket.Conn) {
-	var server_connection *websocket.Conn
-	if len(server_conn) > 0 {
-		server_connection = server_conn[0]
-	}
+func DisConnect(anchor *map[string]interface{}, server_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Logger("Error: AnchorSetRfConfig", err)
-			MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorSetRfConfig"}, server_connection)
+			Logger.Logger("ERROR : AnchorDisConnect", err)
+			if server_connection != nil {
+				MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorDisConnect"}, server_connection)
+			}
+		}
+	}()
+	(*anchor)["connection"].(net.Conn).Close()
+	Logger.Logger("SUCCESS : AnchorDisConnect "+(*anchor)["ip"].(string), nil)
+	if server_connection != nil {
+		MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorDisConnect " + (*anchor)["ip"].(string)}, server_connection)
+	}
+}
+
+func SetRfConfig(anchor map[string]interface{}, rf_config map[string]interface{}, server_connection *websocket.Conn) {
+	defer func() {
+		if err := recover(); err != nil {
+			Logger.Logger("ERROR : AnchorSetRfConfig", err)
+			if server_connection != nil {
+				MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorSetRfConfig"}, server_connection)
+			}
 		}
 	}()
 	var PRF map[int]int = map[int]int{
@@ -201,56 +205,53 @@ func SetRfConfig(anchor map[string]interface{}, rf_config map[string]interface{}
 		int(rf_config["lag"].(float64)))
 
 	anchor["connection"].(net.Conn).Write(RTLS_CMD_SET_CFG_CCP)
-	Logger.Logger("SetRfConfig on the anchor "+anchor["ip"].(string), nil)
-	MessageToServer(map[string]interface{}{"action": "Success", "data": "Success: SetRfConfig on the anchor " + anchor["ip"].(string)}, server_connection)
+	Logger.Logger("SUCCESS : SetRfConfig on the anchor "+anchor["ip"].(string), nil)
+	if server_connection != nil {
+		MessageToServer(map[string]interface{}{"action": "Success", "data": "Success: SetRfConfig on the anchor " + anchor["ip"].(string)}, server_connection)
+	}
 }
 
-func StartSpam(anchor map[string]interface{}, server_conn ...*websocket.Conn) {
-	var server_connection *websocket.Conn
-	if len(server_conn) > 0 {
-		server_connection = server_conn[0]
-	}
+func StartSpam(anchor map[string]interface{}, server_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Logger("Error: AnchorStartSpam", err)
-			MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorStartSpam"}, server_connection)
+			Logger.Logger("ERROR : AnchorStartSpam", err)
+			if server_connection != nil {
+				MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorStartSpam"}, server_connection)
+			}
 		}
 	}()
 	anchor["connection"].(net.Conn).Write(ReportsAndMessages.Build_RTLS_START_REQ(1))
-	Logger.Logger("AnchorStartSpam "+anchor["ip"].(string), nil)
-	MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorStartSpam " + anchor["ip"].(string)}, server_connection)
+	Logger.Logger("SUCCESS : AnchorStartSpam "+anchor["ip"].(string), nil)
+	if server_connection != nil {
+		MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorStartSpam " + anchor["ip"].(string)}, server_connection)
+	}
 }
 
-func StopSpam(anchor map[string]interface{}, server_conn ...*websocket.Conn) {
-	var server_connection *websocket.Conn
-	if len(server_conn) > 0 {
-		server_connection = server_conn[0]
-	}
+func StopSpam(anchor map[string]interface{}, server_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Logger("Error: AnchorStopSpam", err)
-			MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorStopSpam"}, server_connection)
+			Logger.Logger("ERROR : AnchorStopSpam", err)
+			if server_connection != nil {
+				MessageToServer(map[string]interface{}{"action": "Error", "data": "Error: AnchorStopSpam"}, server_connection)
+			}
 		}
 	}()
 	anchor["connection"].(net.Conn).Write(ReportsAndMessages.Build_RTLS_START_REQ(0))
-	Logger.Logger("AnchorStopSpam "+anchor["ip"].(string), nil)
-	MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorStopSpam " + anchor["ip"].(string)}, server_connection)
+	Logger.Logger("SUCCESS : AnchorStopSpam "+anchor["ip"].(string), nil)
+	if server_connection != nil {
+		MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorStopSpam " + anchor["ip"].(string)}, server_connection)
+	}
 }
 
-func MessageToServer(map_message map[string]interface{}, server_conn ...*websocket.Conn) {
+func MessageToServer(map_message map[string]interface{}, server_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
-			Logger.Logger("Error: AnchorMessageToServer: ", err)
+			Logger.Logger("ERROR : anchor message to server", err)
 		}
 	}()
-
-	var server_connection *websocket.Conn
-	if len(server_conn) > 0 {
-		server_connection = server_conn[0]
-		if server_connection != nil {
-			json_message, _ := json.Marshal(map_message)
-			server_connection.WriteMessage(websocket.TextMessage, json_message)
-			Logger.Logger("Message to server: "+string(json_message), nil)
-		}
+	if server_connection != nil {
+		json_message, _ := json.Marshal(map_message)
+		server_connection.WriteMessage(websocket.TextMessage, json_message)
+		Logger.Logger("SUCCESS : anchor message to server: "+string(json_message), nil)
 	}
 }
