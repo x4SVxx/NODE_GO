@@ -21,9 +21,8 @@ var login_flag, config_flag, start_spam_flag bool = false, false, false
 var anchors_array []map[string]interface{}
 var rf_config = map[string]interface{}{}
 var server_connection *websocket.Conn
-var math_connection *websocket.Conn
 
-func CheckAnchors(anchors_mas *[]map[string]interface{}, server_connection *websocket.Conn) {
+func CheckAnchors(server_connection *websocket.Conn) {
 	for {
 		func() {
 			defer func() {
@@ -31,22 +30,28 @@ func CheckAnchors(anchors_mas *[]map[string]interface{}, server_connection *webs
 					Logger.Logger("ERROR : CheckAnchors", err)
 				}
 			}()
-			for i := 0; i < len(*anchors_mas); i++ {
-				if (*anchors_mas)[i]["connection"] == nil {
-					Anchor.Connect(&(*anchors_mas)[i], server_connection)
-					Anchor.SetRfConfig((*anchors_mas)[i], rf_config, server_connection)
+			for i := 0; i < len(anchors_array); i++ {
+				if anchors_array[i]["connection"] == nil {
+					Anchor.Connect(&anchors_array[i], server_connection)
+					Anchor.SetRfConfig(anchors_array[i], rf_config, server_connection)
+					if start_spam_flag {
+						Anchor.StartSpam(anchors_array[i], server_connection)
+						if independent_flag == "false" {
+							go Anchor.Handler(apikey, name, clientid, roomid, organization, independent_flag, connect_math_flag, &(anchors_array[i]), server_connection)
+						} else {
+							go Anchor.Handler("apikey", "name", "clientid", "roomid", "organization", independent_flag, connect_math_flag, &(anchors_array[i]), server_connection)
+						}
+					}
 				}
 			}
 		}()
+		time.Sleep(5 * time.Second)
 	}
 }
 
 func main() {
 	if independent_flag == "true" {
-		chan_math_connection := make(chan *websocket.Conn)
-		go ServerForMath.StartServer(node_server_ip, node_server_port, chan_math_connection, server_connection)
-		math_connection = <-chan_math_connection
-		close(chan_math_connection)
+		go ServerForMath.StartServer(node_server_ip, node_server_port, server_connection)
 
 		var config []map[string]interface{}
 		config_file, _ := os.ReadFile("Config.json")
@@ -67,31 +72,39 @@ func main() {
 			Anchor.Connect(&anchor, server_connection)
 			anchors_array = append(anchors_array, anchor)
 		}
-		MessageToMath(math_connection, map[string]interface{}{"action": "RoomConfig", "data": map[string]interface{}{"clientid": "clientid", "organization": "clientid", "roomid": "roomid", "roomname": "roomname", "anchors": anchors_array, "ref_tag_config": ref_tag_config}})
+		ServerForMath.RoomAndReftagConfig(anchors_array, ref_tag_config)
 
-		var rf_config []map[string]interface{}
+		var rf_config_reader []map[string]interface{}
 		rf_config_file, _ := os.ReadFile("RfConfig.json")
-		json.Unmarshal(rf_config_file, &rf_config)
+		json.Unmarshal(rf_config_file, &rf_config_reader)
+		rf_config = rf_config_reader[0]
 		for i := 0; i < len(anchors_array); i++ {
-			Anchor.SetRfConfig((anchors_array)[i], rf_config[0], server_connection)
+			Anchor.SetRfConfig((anchors_array)[i], rf_config, server_connection)
 		}
+		config_flag = true
+
+		start_spam_flag = true
 		for i := 0; i < len(anchors_array); i++ {
 			Anchor.StartSpam((anchors_array)[i], server_connection)
-			go Anchor.Handler("apikey", "name", "clientid", "roomid", "organization", &(anchors_array[i]), server_connection, math_connection)
+			go Anchor.Handler("apikey", "name", "clientid", "roomid", "organization", independent_flag, connect_math_flag, &(anchors_array[i]), server_connection)
 		}
+
+		go CheckAnchors(server_connection)
 
 		for {
 			var name string
 			fmt.Scanf("%s\n", &name)
 			if name == "Stop" {
+				start_spam_flag = false
 				for i := 0; i < len(anchors_array); i++ {
 					Anchor.StopSpam((anchors_array)[i], server_connection)
 				}
 			}
 			if name == "Start" {
+				start_spam_flag = true
 				for i := 0; i < len(anchors_array); i++ {
 					Anchor.StartSpam((anchors_array)[i], server_connection)
-					go Anchor.Handler("apikey", "name", "clientid", "roomid", "organization", &(anchors_array[i]), server_connection, math_connection)
+					go Anchor.Handler("apikey", "name", "clientid", "roomid", "organization", independent_flag, connect_math_flag, &(anchors_array[i]), server_connection)
 				}
 			}
 		}
@@ -113,10 +126,7 @@ func main() {
 					Logger.Logger("SUCCESS : node connected to the server "+string(server_ip)+":"+string(server_port), nil)
 
 					if connect_math_flag == "true" {
-						chan_math_connection := make(chan *websocket.Conn)
-						go ServerForMath.StartServer(node_server_ip, node_server_port, chan_math_connection, server_connection)
-						math_connection = <-chan_math_connection
-						close(chan_math_connection)
+						go ServerForMath.StartServer(node_server_ip, node_server_port, server_connection)
 					}
 
 					MessageToServer(server_connection, map[string]interface{}{"action": "Login", "login": login, "password": password, "roomid": roomid})
@@ -150,10 +160,10 @@ func main() {
 										Login(message_map, server_connection)
 									}
 									if message_map["action"] == "SetConfig" && message_map["status"] == "true" {
-										SetConfig(message_map, server_connection, math_connection)
+										SetConfig(message_map, server_connection)
 									}
 									if message_map["action"] == "Start" && message_map["status"] == "true" {
-										StartSpam(server_connection, math_connection)
+										StartSpam(server_connection)
 									}
 									if message_map["action"] == "Stop" && message_map["status"] == "true" {
 										StopSpam(server_connection)
@@ -195,7 +205,7 @@ func Login(message_map map[string]interface{}, server_connection *websocket.Conn
 	}
 }
 
-func SetConfig(message_map map[string]interface{}, server_connection *websocket.Conn, math_connection *websocket.Conn) {
+func SetConfig(message_map map[string]interface{}, server_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
 			Logger.Logger("ERROR : main SetConfig", err)
@@ -244,16 +254,17 @@ func SetConfig(message_map map[string]interface{}, server_connection *websocket.
 		}
 
 		config_flag = true
+		go CheckAnchors(server_connection)
 
-		if math_connection != nil {
-			MessageToMath(math_connection, map[string]interface{}{"action": "RoomConfig", "data": map[string]interface{}{"clientid": "clientid", "organization": "organization", "roomid": "roomid", "roomname": "roomname", "anchors": anchors_array, "ref_tag_config": ref_tag_config}})
+		if independent_flag == "true" || connect_math_flag == "true" {
+			ServerForMath.RoomAndReftagConfig(anchors_array, ref_tag_config)
 		} else {
 			MessageToServer(server_connection, map[string]interface{}{"action": "RoomConfig", "apikey": apikey, "clientid": clientid, "organization": clientid, "roomid": roomid, "roomname": roomname, "anchors": anchors_array, "ref_tag_config": ref_tag_config})
 		}
 	}
 }
 
-func StartSpam(server_connection *websocket.Conn, math_connection *websocket.Conn) {
+func StartSpam(server_connection *websocket.Conn) {
 	defer func() {
 		if err := recover(); err != nil {
 			Logger.Logger("ERROR : main StartSpam", err)
@@ -264,11 +275,11 @@ func StartSpam(server_connection *websocket.Conn, math_connection *websocket.Con
 		MessageToServer(server_connection, map[string]interface{}{"action": "Error", "data": "Error: StartSpam - need Config"})
 	} else {
 		if !start_spam_flag {
+			start_spam_flag = true
 			for i := 0; i < len(anchors_array); i++ {
 				Anchor.StartSpam((anchors_array)[i], server_connection)
-				go Anchor.Handler(apikey, name, clientid, roomid, organization, &(anchors_array[i]), server_connection, math_connection)
+				go Anchor.Handler(apikey, name, clientid, roomid, organization, independent_flag, connect_math_flag, &(anchors_array[i]), server_connection)
 			}
-			start_spam_flag = true
 		}
 	}
 }
@@ -281,10 +292,10 @@ func StopSpam(server_connection *websocket.Conn) {
 		}
 	}()
 	if start_spam_flag {
+		start_spam_flag = false
 		for i := 0; i < len(anchors_array); i++ {
 			Anchor.StopSpam(anchors_array[i], server_connection)
 		}
-		start_spam_flag = false
 	}
 }
 
@@ -297,15 +308,4 @@ func MessageToServer(server_connection *websocket.Conn, map_message map[string]i
 	json_message, _ := json.Marshal(map_message)
 	server_connection.WriteMessage(websocket.TextMessage, json_message)
 	Logger.Logger("SUCCESS : main - Message to server: "+string(json_message), nil)
-}
-
-func MessageToMath(math_connection *websocket.Conn, map_message map[string]interface{}) {
-	defer func() {
-		if err := recover(); err != nil {
-			Logger.Logger("ERROR : main - MessageToMath", err)
-		}
-	}()
-	json_message, _ := json.Marshal(map_message)
-	math_connection.WriteMessage(websocket.TextMessage, json_message)
-	Logger.Logger("SUCCESS : main - Message to math: "+string(json_message), nil)
 }

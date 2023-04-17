@@ -14,7 +14,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="E:/PYTHON/PyQt_Client" />
   </component>
   <component name="RunManager">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -56,30 +56,30 @@
     <servers />
   </component>
   <component name="WindowStateProjectService">
-    <state x="650" y="229" key="FileChooserDialogImpl" timestamp="1679669475080">
+    <state x="650" y="229" key="FileChooserDialogImpl" timestamp="1681738514143">
       <screen x="0" y="0" width="1739" height="947" />
     </state>
-    <state x="650" y="229" key="FileChooserDialogImpl/0.0.1739.947@0.0.1739.947" timestamp="1679669475080" />
-    <state width="1718" height="151" key="GridCell.Tab.0.bottom" timestamp="1679685340410">
+    <state x="650" y="229" key="FileChooserDialogImpl/0.0.1739.947@0.0.1739.947" timestamp="1681738514143" />
+    <state width="1718" height="151" key="GridCell.Tab.0.bottom" timestamp="1681739500122">
       <screen x="0" y="0" width="1739" height="947" />
     </state>
     <state width="1718" height="151" key="GridCell.Tab.0.bottom/0.0.1739.947/1920.0.1159.896@0.0.1739.947" timestamp="1679685340410" />
-    <state width="1718" height="151" key="GridCell.Tab.0.bottom/0.0.1739.947@0.0.1739.947" timestamp="1679676053619" />
-    <state width="1718" height="151" key="GridCell.Tab.0.center" timestamp="1679685340409">
+    <state width="1718" height="151" key="GridCell.Tab.0.bottom/0.0.1739.947@0.0.1739.947" timestamp="1681739500122" />
+    <state width="1718" height="151" key="GridCell.Tab.0.center" timestamp="1681739500122">
       <screen x="0" y="0" width="1739" height="947" />
     </state>
     <state width="1718" height="151" key="GridCell.Tab.0.center/0.0.1739.947/1920.0.1159.896@0.0.1739.947" timestamp="1679685340409" />
-    <state width="1718" height="151" key="GridCell.Tab.0.center/0.0.1739.947@0.0.1739.947" timestamp="1679676053619" />
-    <state width="1718" height="151" key="GridCell.Tab.0.left" timestamp="1679685340409">
+    <state width="1718" height="151" key="GridCell.Tab.0.center/0.0.1739.947@0.0.1739.947" timestamp="1681739500122" />
+    <state width="1718" height="151" key="GridCell.Tab.0.left" timestamp="1681739500122">
       <screen x="0" y="0" width="1739" height="947" />
     </state>
     <state width="1718" height="151" key="GridCell.Tab.0.left/0.0.1739.947/1920.0.1159.896@0.0.1739.947" timestamp="1679685340409" />
-    <state width="1718" height="151" key="GridCell.Tab.0.left/0.0.1739.947@0.0.1739.947" timestamp="1679676053619" />
-    <state width="1718" height="151" key="GridCell.Tab.0.right" timestamp="1679685340409">
+    <state width="1718" height="151" key="GridCell.Tab.0.left/0.0.1739.947@0.0.1739.947" timestamp="1681739500122" />
+    <state width="1718" height="151" key="GridCell.Tab.0.right" timestamp="1681739500122">
       <screen x="0" y="0" width="1739" height="947" />
     </state>
     <state width="1718" height="151" key="GridCell.Tab.0.right/0.0.1739.947/1920.0.1159.896@0.0.1739.947" timestamp="1679685340409" />
-    <state width="1718" height="151" key="GridCell.Tab.0.right/0.0.1739.947@0.0.1739.947" timestamp="1679676053619" />
+    <state width="1718" height="151" key="GridCell.Tab.0.right/0.0.1739.947@0.0.1739.947" timestamp="1681739500122" />
     <state width="1718" height="311" key="GridCell.Tab.1.bottom" timestamp="1675415521382">
       <screen x="0" y="0" width="1739" height="947" />
     </state>
@@ -96,5 +96,9 @@
       <screen x="0" y="0" width="1739" height="947" />
     </state>
     <state width="1718" height="311" key="GridCell.Tab.1.right/0.0.1739.947@0.0.1739.947" timestamp="1675415521382" />
+    <state x="532" y="202" width="672" height="678" key="search.everywhere.popup" timestamp="1681722851956">
+      <screen x="0" y="0" width="1739" height="947" />
+    </state>
+    <state x="532" y="202" width="672" height="678" key="search.everywhere.popup/0.0.1739.947@0.0.1739.947" timestamp="1681722851956" />
   </component>
 </project>

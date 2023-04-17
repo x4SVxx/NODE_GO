@@ -10,12 +10,10 @@ class Tag():
         self.ID = msg['data']["sender"]
         self.SN = -1
         self.measurements = []
-        self.x = 0.0
-        self.y = 0.0
-        self.x_f = self.x
-        self.y_f = self.y
-        self.x_f_past = self.x
-        self.y_f_past = self.y
+        self.x = None
+        self.y = None
+        self.x_f = None
+        self.y_f = None
         self.h = cle.cfg.hei
         self.DOP = 1.
         self.starttime = time.time()
@@ -36,16 +34,17 @@ class Tag():
     def add_data(self, msg):
         TAG_STATIC = 0x1
         TAG_SOS = 0x8
-        
-        if msg["data"]["state"] & TAG_STATIC:
-            self.static = True
-        else:
-            self.static = False
 
-        if msg["data"]["state"] & TAG_SOS:
-            self.SOS = True
-        else:
-            self.SOS = False
+        if msg["data"]["state"]:
+            if msg["data"]["state"] & TAG_STATIC:
+                self.static = True
+            else:
+                self.static = False
+
+            if msg["data"]["state"] & TAG_SOS:
+                self.SOS = True
+            else:
+                self.SOS = False
 
         if time.time() - self.lasttime > 10:
             self.x_buffer = []

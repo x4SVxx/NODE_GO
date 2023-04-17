@@ -34,6 +34,11 @@ func ReadAndSetConfig() string {
 }
 
 func Logger(map_message string, err interface{}) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("ERROR : LOGGER ", err)
+		}
+	}()
 	if log_enable_flag == "true" {
 		time_now := time.Now().Unix()
 		if txt_file_count == 0 || time_now-time_last_logger_file > 60*60 {
@@ -48,7 +53,13 @@ func Logger(map_message string, err interface{}) {
 		// fmt.Println(runtime.NumGoroutine())
 		if err != nil {
 			fmt.Println(err)
-			txt_file_for_logger.WriteString(err.(error).Error() + "\n")
+			func() {
+				defer func() {
+					txt_file_for_logger.WriteString(err.(string) + "\n")
+				}()
+				txt_file_for_logger.WriteString(err.(error).Error() + "\n")
+			}()
+
 		}
 	}
 	if log_enable_flag == "false" {
