@@ -152,27 +152,35 @@ async def client_handler(server_ip, server_port):
     async with websockets.connect(url, ping_interval=None) as ws:
         await ws.send(json.dumps({"action": "Login", "login": "mathLogin", "password": "%wPp7VO6k7ump{BP4mu2rm4w?p|J5N%P", "roomid": "1"}))
         # ws.send("{\"action\":\"Login\",\"login\":\"mathLogin\",\"password\":\"%wPp7VO6k7ump{BP4mu2rm4w?p|J5N%P\",\"roomid\":\"1\"}")
-        while True:
-            message = json.loads(await ws.recv())
-            print("MESSAGE FROM SERVER: " + str(message))
-            if message["action"] == "RoomConfig":
-                process_config(message, CLE, cfg)
-            elif message["action"] == "CS_TX":
-                cle = get_current_cle(message, CLE)
-                if cle:
-                    await process_TX(message, cle, ws)
-            elif message["action"] == "CS_RX":
-                cle = get_current_cle(message, CLE)
-                if cle:
-                    await process_RX(message, cle, ws)
-            elif message["action"] == "BLINK":
-                cle = get_current_cle(message, CLE)
-                if cle:
-                    await process_BLINK(message, cle, ws)
-            elif message["action"] == "Login":
-                global apikey
-                apikey = message["apikey"]
-                print("Login succsess")
+        await asyncio.gather(client_sender(ws), client_receiver(ws)) # запуск асинхронной работы приемной и передающей функций ноды
+
+async def client_sender(ws):
+    while True:
+        ws.send(json.dumps({"action": "PING", "apikey": apikey}))
+        await asyncio.sleep(5)
+
+async def client_receiver(ws):
+    while True:
+        message = json.loads(await ws.recv())
+        print("MESSAGE FROM SERVER: " + str(message))
+        if message["action"] == "RoomConfig":
+            process_config(message, CLE, cfg)
+        elif message["action"] == "CS_TX":
+            cle = get_current_cle(message, CLE)
+            if cle:
+                await process_TX(message, cle, ws)
+        elif message["action"] == "CS_RX":
+            cle = get_current_cle(message, CLE)
+            if cle:
+                await process_RX(message, cle, ws)
+        elif message["action"] == "BLINK":
+            cle = get_current_cle(message, CLE)
+            if cle:
+                await process_BLINK(message, cle, ws)
+        elif message["action"] == "Login":
+            global apikey
+            apikey = message["apikey"]
+            print("Login succsess")
 
 async def ws_config():
     server_ip = "127.0.0.1"

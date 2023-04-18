@@ -83,6 +83,14 @@ func Receiver(connection *websocket.Conn, server_connection *websocket.Conn) {
 					Logger.Logger("SUCCESS : Message to server: "+string(json_message_for_server), nil)
 				}
 			} else if message_map["apikey"] == math_apikey {
+				if message_map["action"] == "PING" {
+					map_answer := map[string]interface{}{
+						"action": "PONG",
+						"apikey": math_apikey,
+					}
+					json_answer, _ := json.Marshal(map_answer)
+					connection.WriteMessage(websocket.TextMessage, json_answer)
+				}
 				if server_connection != nil {
 					server_connection.WriteMessage(websocket.TextMessage, message)
 					Logger.Logger("SUCCESS : Message from math to server: "+string(message), nil)
