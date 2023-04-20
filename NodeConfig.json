@@ -6,11 +6,11 @@
 	"password": "TestOrgPass",
 	"roomid": "1",
 
-	"independent_flag": "false",
+	"independent_flag": "true",
 	"connect_math_flag": "false",
 
 	"node_server_ip": "127.0.0.1",
-	"node_server_port": "9000",
+	"node_server_port": "8000",
 
 	"log_enable_flag": "false",
 

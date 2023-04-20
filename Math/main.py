@@ -27,7 +27,8 @@ async  def process_TX(msg, cle, ws):
             if anchor.data2sendflag:
                 data2send = get_anchor_info(anchor)
                 print('Process_TX data2send ', data2send)
-                await ws.send(json.dumps({'action':'ECHO','data':data2send,'apikey':apikey}))
+                print("")
+                # await ws.send(json.dumps({'action':'SendToUserPOHUY','data':data2send,'apikey':apikey, 'organization': cle.organization}))
                 anchor.data2sendflag = 0
 
 async  def process_RX(msg, cle, ws):
@@ -37,7 +38,8 @@ async  def process_RX(msg, cle, ws):
                 if anchor.data2sendflag:
                     data2send = get_anchor_info(anchor)
                     print('Process_RX data2send ', data2send)
-                    await ws.send(json.dumps({'action':'ECHO','data':data2send,'apikey':apikey}))
+                    print("")
+                    # await ws.send(json.dumps({'action':'SendToUserPOHUY','data':data2send,'apikey':apikey, 'organization': cle.organization}))
                     anchor.data2sendflag = 0
                 break
 
@@ -55,14 +57,14 @@ async  def process_BLINK(msg, cle, ws):
                     anchor.add_master_ref_tag(msg)
                     if anchor.data2sendflag:
                         data2send = get_anchor_info(anchor)
-                        await ws.send(json.dumps({'action':'ECHO','data':data2send,'apikey':apikey}))
+                        # await ws.send(json.dumps({'action':'SendToUserPOHUY','data':data2send,'apikey':apikey, 'organization': cle.organization}))
                         anchor.data2sendflag = 0
             for anchor in cle.anchors:
                 if msg["data"]["receiver"] == anchor.ID:
                     anchor.add_slave_ref_tag(msg)
                     if anchor.data2sendflag:
                         data2send = get_anchor_info(anchor)
-                        await ws.send(json.dumps({'action':'ECHO','data':data2send,'apikey':apikey}))
+                        # await ws.send(json.dumps({'action':'SendToUserPOHUY','data':data2send,'apikey':apikey, 'organization': cle.organization}))
                         anchor.data2sendflag = 0
                     break
             return
@@ -81,18 +83,20 @@ async  def process_BLINK(msg, cle, ws):
         if match_flag == 0:
             tag = Tag(msg, cle)
             print(f"New tag {tag.ID}")
-            cle.tags.append(tag)
+            cle.tags.append(tag) 
         tag.add_data(msg)
         if tag.data2sendflag:
             data2send = get_tag_info(tag, cle)
             print('Process_BLINK data2send ', data2send)
-            await ws.send(json.dumps({'action':'ECHO','data':data2send,'apikey':apikey}))
+            print("")
+            await ws.send(json.dumps({'action':'SendToUser','data':data2send,'apikey':apikey, 'organization': cle.organization}))
             tag.data2sendflag = 0
 
 def get_current_cle(msg, CLE):
     cle = []
     for cle in CLE:
         if cle.organization == msg["data"]["organization"] and cle.roomid == msg["data"]["roomid"]:
+            print("GET CURRENT CLE")
             break
     return cle
 
@@ -101,9 +105,7 @@ def get_tag_info(tag, cle):
     tag_info["type"] = "tag"
     tag_info["ID"] = tag.ID
 
-    tag_info["x"] = tag.x
-    tag_info["y"] = tag.y
-    tag_info["z"] = tag.h
+
 
     if tag.x_f is None and tag.y_f is None:
         tag.x_f = tag.x
@@ -113,6 +115,10 @@ def get_tag_info(tag, cle):
         tag.y_f = tag.y_f * tag.cle.cfg.alpha + tag.y * (1 - tag.cle.cfg.alpha)
     tag_info["x_f"] = tag.x_f
     tag_info["y_f"] = tag.y_f
+
+    tag_info["x"] = tag.x_f
+    tag_info["y"] = tag.y_f
+    tag_info["z"] = tag.h
 
     tag_info["dop"] = tag.DOP
     tag_info["lifetime"] = tag.lifetime
@@ -155,7 +161,7 @@ async def math_client_handler():
 
 async def math_client_sender(ws):
     while True:
-        await ws.send(json.dumps({"action": "PING", "apikey": apikey}))
+        # await ws.send(json.dumps({"action": "PING", "apikey": apikey}))
         await asyncio.sleep(5)
 
 async def math_client_receiver(ws):
@@ -179,7 +185,9 @@ async def math_client_receiver(ws):
                     await process_BLINK(message, cle, ws)
             elif message["action"] == "Login":
                 global apikey
-                apikey = message["apikey"]
+                if 'data' in message:
+                    if 'apikey' in message["data"]:
+                        apikey = message["data"]["apikey"]
                 print("Login succsess")
 
 
@@ -188,17 +196,16 @@ if __name__ == "__main__":
     CLE = []
     apikey = ""
 
-    server_ip = ""
-    server_port = ""
+    server_ip = "10.3.168.104"
+    server_port = "9000"
 
-    try:
-        with open('../NODE/NodeConfig.json') as file:
-            node_config = json.load(file)
-            server_ip = node_config["node_server_ip"]
-            server_port = node_config["node_server_port"]
-    except:
-        pass
+    # try:
+    #     with open('../NODE/NodeConfig.json') as file:
+    #         node_config = json.load(file)
+    #         server_ip = node_config["node_server_ip"]
+    #         server_port = node_config["node_server_port"]
+    # except:
+    #     pass
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(math_client_handler())
-

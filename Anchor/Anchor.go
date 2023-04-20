@@ -55,30 +55,31 @@ func SendToMath(message map[string]interface{}, apikey string, name string, clie
 			Logger.Logger(string(json_math_message), nil)
 
 			ServerForMath.MessageToMath(math_map_message)
-		}
-		if server_connection != nil {
-			math_map_message := map[string]interface{}{
-				"action":       "SendToMath",
-				"apikey":       apikey,
-				"orgname":      name,
-				"organization": organization,
-				"clientid":     clientid,
-				"roomid":       roomid,
-				"type":         message["type"],
-				"timestamp":    message["timestamp"],
-				"receiver":     message["receiver"],
-				"sender":       message["sender"],
-			}
-			if message["type"] == "CS_RX" || message["type"] == "CS_TX" {
-				math_map_message["seq"] = message["seq"]
-			}
-			if message["type"] == "BLINK" {
-				math_map_message["sn"] = message["sn"]
-			}
-			json_math_message, _ := json.Marshal(math_map_message)
-			Logger.Logger(string(json_math_message), nil)
+		} else {
+			if server_connection != nil {
+				math_map_message := map[string]interface{}{
+					"action":       "SendToMath",
+					"apikey":       apikey,
+					"orgname":      name,
+					"organization": organization,
+					"clientid":     clientid,
+					"roomid":       roomid,
+					"type":         message["type"],
+					"timestamp":    message["timestamp"],
+					"receiver":     message["receiver"],
+					"sender":       message["sender"],
+				}
+				if message["type"] == "CS_RX" || message["type"] == "CS_TX" {
+					math_map_message["seq"] = message["seq"]
+				}
+				if message["type"] == "BLINK" {
+					math_map_message["sn"] = message["sn"]
+				}
+				json_math_message, _ := json.Marshal(math_map_message)
+				Logger.Logger(string(json_math_message), nil)
 
-			MessageToServer(math_map_message, server_connection)
+				MessageToServer(math_map_message, server_connection)
+			}
 		}
 	}
 }

@@ -201,7 +201,7 @@ func SetConfig(message_map map[string]interface{}) {
 		if independent_flag == "true" || connect_math_flag == "true" {
 			ServerForMath.RoomAndReftagConfig(anchors_array, ref_tag_config)
 		} else {
-			MessageToServer(map[string]interface{}{"action": "RoomConfig", "apikey": apikey, "clientid": clientid, "organization": clientid, "roomid": roomid, "roomname": roomname, "anchors": anchors_array, "ref_tag_config": ref_tag_config})
+			MessageToServer(map[string]interface{}{"action": "RoomConfig", "apikey": apikey, "clientid": clientid, "organization": organization, "roomid": roomid, "roomname": roomname, "anchors": anchors_array, "ref_tag_config": ref_tag_config})
 		}
 	}
 }

@@ -8,12 +8,13 @@ class Cle():
         self.cfg = cfg
         self.organization = msg["data"]["organization"]
         self.roomid = msg["data"]["roomid"]
+        self.ref_tag = None
 
         # reference tag
         if 'data' in msg:
-            if 'ref_tag_config' in msg['data']
+            if 'ref_tag_config' in msg['data']:
                 self.ref_tag = msg["data"]["ref_tag_config"]
-        if self.ref_tag:
+        if self.ref_tag is not None:
             self.use_ref_tag = True
         else:
             self.use_ref_tag = False
