@@ -1,0 +1,38 @@
+SUCCESS : ReadAndSetNodeConfig 
+--- server_ip: 127.0.0.1 ---
+--- server_port: 9000 ---
+--- login: TestOrg ---
+--- password: TestOrgPass ---
+--- roomid: 1 ---
+--- connect_math_flag: true ---
+--- independent_flag: false ---
+--- node_server_ip: 127.0.0.1 ---
+--- node_server_port: 8000 ---
+--- log_enable_flag: true ---
+--- ref_tag_config: {} ---
+
+SUCCESS : node connected to the server 127.0.0.1:9000
+SUCCESS : main - Message to server: {"action":"Login","login":"TestOrg","password":"TestOrgPass","roomid":"1"}
+SUCCESS : message from server {"action": "Login", "status": "true", "data": {"apikey": "w0W1S2r354w5E6J7B8K9k10911i12o13j14", "clientid": "va4gerg-4rgs", "roomname": "node_1", "name": "TestOrg", "organization": "TestOrg"}}
+SUCCESS : main - Message to server: {"action":"Success","data":"Success: Login"}
+SUCCESS : New websocket connection for node
+SUCCESS: Message to server: {"action":"Success","data":"Node's server connection"}
+SUCCESS : Message from node's client: {"action": "Login", "login": "mathLogin", "password": "%wPp7VO6k7ump{BP4mu2rm4w?p|J5N%P", "roomid": "1"}
+Message to client: {"action":"Login","apikey":"O1nQu-bkcx)Nmw2ZSei№LAfY-cse?D"}
+SUCCESS : Message to server: {"action":"Success","data":"math connected"}
+SUCCESS : Message from node's client: {"action": "PING", "apikey": ""}
+SUCCESS : message from server {"action": "SetConfig", "status": "true", "anchors": [{"ip": "192.168.99.9", "number": 1, "masternumber": 0, "role": "Master", "lag": 2000, "adrx": 16492, "adtx": 16492, "x": 11.4, "y": 5.24, "z": 2.63}, {"ip": "192.168.99.12", "number": 2, "masternumber": 1, "role": "Slave", "lag": 2000, "adrx": 16492, "adtx": 16492, "x": 11.38, "y": 0.47, "z": 2.84}, {"ip": "192.168.99.11", "number": 3, "masternumber": 1, "role": "slave", "lag": 3000, "adrx": 16492, "adtx": 16492, "x": 0.48, "y": 0.47, "z": 2.67}, {"ip": "192.168.99.10", "number": 4, "masternumber": 1, "role": "Slave", "lag": 4000, "adrx": 16492, "adtx": 16492, "x": 0.48, "y": 5.24, "z": 2.62}], "rf_config": [{"chnum": 2, "prf": 64, "datarate": 6.8, "preamblecode": 9, "preamblelen": 128, "pac": 16, "nsfd": 0, "diagnostic": 0, "lag": 20000}]}
+SUCCESS : Message from node's client: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message from math to server: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message to math: {"action":"RoomConfig","data":{"anchors":[{"adrx":16492,"adtx":16492,"connection":null,"id":null,"ip":"192.168.99.9","lag":2000,"masternumber":0,"number":1,"role":"Master","x":11.4,"y":5.24,"z":2.63},{"adrx":16492,"adtx":16492,"connection":null,"id":null,"ip":"192.168.99.12","lag":2000,"masternumber":1,"number":2,"role":"Slave","x":11.38,"y":0.47,"z":2.84},{"adrx":16492,"adtx":16492,"connection":null,"id":null,"ip":"192.168.99.11","lag":3000,"masternumber":1,"number":3,"role":"slave","x":0.48,"y":0.47,"z":2.67},{"adrx":16492,"adtx":16492,"connection":null,"id":null,"ip":"192.168.99.10","lag":4000,"masternumber":1,"number":4,"role":"Slave","x":0.48,"y":5.24,"z":2.62}],"clientid":"clientid","organization":"clientid","ref_tag_config":{},"roomid":"roomid","roomname":"roomname"}}
+SUCCESS : Message from node's client: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message from math to server: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message from node's client: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message from math to server: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message from node's client: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message from math to server: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message from node's client: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+SUCCESS : Message from math to server: {"action": "PING", "apikey": "O1nQu-bkcx)Nmw2ZSei\u2116LAfY-cse?D"}
+ERROR : AnchorConnect
+dial tcp 192.168.99.9:3000: connectex: A connection attempt failed because the connected party did not properly respond after a period of time, or established connection failed because connected host has failed to respond.
+SUCCESS : anchor message to server: {"action":"Error","data":"Error: AnchorConnect 192.168.99.9"}

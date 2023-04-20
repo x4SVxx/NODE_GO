@@ -147,57 +147,58 @@ def get_anchor_info(anchor):
     anchor_info["roomid"] = anchor.roomid
     return anchor_info
 
-async def client_handler(server_ip, server_port):
+async def math_client_handler():
     url = f"ws://{server_ip}:{server_port}"
     async with websockets.connect(url, ping_interval=None) as ws:
         await ws.send(json.dumps({"action": "Login", "login": "mathLogin", "password": "%wPp7VO6k7ump{BP4mu2rm4w?p|J5N%P", "roomid": "1"}))
-        # ws.send("{\"action\":\"Login\",\"login\":\"mathLogin\",\"password\":\"%wPp7VO6k7ump{BP4mu2rm4w?p|J5N%P\",\"roomid\":\"1\"}")
-        await asyncio.gather(client_sender(ws), client_receiver(ws)) # запуск асинхронной работы приемной и передающей функций ноды
+        await asyncio.gather(math_client_sender(ws), math_client_receiver(ws))
 
-async def client_sender(ws):
+async def math_client_sender(ws):
     while True:
-        ws.send(json.dumps({"action": "PING", "apikey": apikey}))
+        await ws.send(json.dumps({"action": "PING", "apikey": apikey}))
         await asyncio.sleep(5)
 
-async def client_receiver(ws):
+async def math_client_receiver(ws):
     while True:
         message = json.loads(await ws.recv())
         print("MESSAGE FROM SERVER: " + str(message))
-        if message["action"] == "RoomConfig":
-            process_config(message, CLE, cfg)
-        elif message["action"] == "CS_TX":
-            cle = get_current_cle(message, CLE)
-            if cle:
-                await process_TX(message, cle, ws)
-        elif message["action"] == "CS_RX":
-            cle = get_current_cle(message, CLE)
-            if cle:
-                await process_RX(message, cle, ws)
-        elif message["action"] == "BLINK":
-            cle = get_current_cle(message, CLE)
-            if cle:
-                await process_BLINK(message, cle, ws)
-        elif message["action"] == "Login":
-            global apikey
-            apikey = message["apikey"]
-            print("Login succsess")
+        if 'action' in message:
+            if message["action"] == "RoomConfig":
+                process_config(message, CLE, cfg)
+            elif message["action"] == "CS_TX":
+                cle = get_current_cle(message, CLE)
+                if cle:
+                    await process_TX(message, cle, ws)
+            elif message["action"] == "CS_RX":
+                cle = get_current_cle(message, CLE)
+                if cle:
+                    await process_RX(message, cle, ws)
+            elif message["action"] == "BLINK":
+                cle = get_current_cle(message, CLE)
+                if cle:
+                    await process_BLINK(message, cle, ws)
+            elif message["action"] == "Login":
+                global apikey
+                apikey = message["apikey"]
+                print("Login succsess")
 
-async def ws_config():
-    server_ip = "127.0.0.1"
-    server_port = "8000"
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(await client_handler(server_ip, server_port))
-
-async def asyncio_start_ws():
-    await ws_config()
-
-def start_ws():
-    asyncio.run(asyncio_start_ws())
 
 if __name__ == "__main__":
     cfg = Config()
     CLE = []
     apikey = ""
 
-    start_ws()
+    server_ip = ""
+    server_port = ""
+
+    try:
+        with open('../NODE/NodeConfig.json') as file:
+            node_config = json.load(file)
+            server_ip = node_config["node_server_ip"]
+            server_port = node_config["node_server_port"]
+    except:
+        pass
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(math_client_handler())
 

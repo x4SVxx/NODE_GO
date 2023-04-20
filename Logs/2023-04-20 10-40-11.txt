@@ -1,0 +1,17 @@
+SUCCESS : ReadAndSetNodeConfig 
+--- server_ip: 127.0.0.1 ---
+--- server_port: 9000 ---
+--- login: TestOrg ---
+--- password: TestOrgPass ---
+--- roomid: 1 ---
+--- connect_math_flag: true ---
+--- independent_flag: true ---
+--- node_server_ip: 127.0.0.1 ---
+--- node_server_port: 8000 ---
+--- log_enable_flag: true ---
+--- ref_tag_config: {} ---
+
+ERROR : main - MessageToServer
+runtime error: invalid memory address or nil pointer dereference
+ERROR : main - MessageToServer
+runtime error: invalid memory address or nil pointer dereference

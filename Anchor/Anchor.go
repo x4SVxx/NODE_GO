@@ -5,6 +5,7 @@ import (
 	"NODE/ReportsAndMessages"
 	"NODE/ServerForMath"
 	"encoding/json"
+	"fmt"
 	"net"
 
 	"github.com/gorilla/websocket"
@@ -119,6 +120,7 @@ func Handler(apikey string, name string, clientid string, roomid string, organiz
 }
 
 func Connect(anchor *map[string]interface{}, server_connection *websocket.Conn) {
+
 	defer func() {
 		if err := recover(); err != nil {
 			Logger.Logger("ERROR : AnchorConnect", err)
@@ -128,6 +130,7 @@ func Connect(anchor *map[string]interface{}, server_connection *websocket.Conn) 
 		}
 	}()
 	anchor_connection, err := net.Dial("tcp", (*anchor)["ip"].(string)+":"+"3000")
+	fmt.Println(anchor_connection)
 	if err != nil {
 		Logger.Logger("ERROR : AnchorConnect", err)
 		if server_connection != nil {
@@ -140,12 +143,11 @@ func Connect(anchor *map[string]interface{}, server_connection *websocket.Conn) 
 		anchor_connection.Read(buffer_anchor_connect)
 		(*anchor)["connection"] = anchor_connection
 		(*anchor)["id"] = ReportsAndMessages.DecodeAnchorMessage(buffer_anchor_connect)["receiver"].(string)
-		Logger.Logger("SUCCESS : AnchorConnect "+(*anchor)["ip"].(string), nil)
-		json_buffer_anchor_connect, _ := json.Marshal(ReportsAndMessages.DecodeAnchorMessage(buffer_anchor_connect))
-		Logger.Logger(string(json_buffer_anchor_connect), nil)
+		Logger.Logger("SUCCESS : AnchorConnect "+(*anchor)["ip"].(string)+" "+(*anchor)["id"].(string), nil)
 		if server_connection != nil {
 			MessageToServer(map[string]interface{}{"action": "Success", "data": "Sucess: AnchorConnect " + (*anchor)["ip"].(string)}, server_connection)
 		}
+
 	}
 }
 

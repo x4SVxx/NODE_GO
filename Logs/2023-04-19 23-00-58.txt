@@ -1,0 +1,17 @@
+SUCCESS : ReadAndSetNodeConfig 
+--- server_ip: 127.0.0.1 ---
+--- server_port: 9000 ---
+--- login: TestOrg ---
+--- password: TestOrgPass ---
+--- roomid: 1 ---
+--- connect_math_flag: true ---
+--- independent_flag: false ---
+--- node_server_ip: 127.0.0.1 ---
+--- node_server_port: 8000 ---
+--- log_enable_flag: true ---
+--- ref_tag_config: {} ---
+
+SUCCESS : node connected to the server 127.0.0.1:9000
+SUCCESS : main - Message to server: {"action":"Login","login":"TestOrg","password":"TestOrgPass","roomid":"1"}
+SUCCESS : message from server {"action": "Login", "status": "true", "data": {"apikey": "50V1w2b3F445n677O889G10t11I12a13A14", "clientid": "va4gerg-4rgs", "roomname": "node_1", "name": "TestOrg", "organization": "TestOrg"}}
+SUCCESS : main - Message to server: {"action":"Success","data":"Success: Login"}

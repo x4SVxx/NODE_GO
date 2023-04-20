@@ -121,7 +121,7 @@ func StartServer(node_server_ip string, node_server_port string, server_connecti
 		}
 		Logger.Logger("SUCCESS : New websocket connection for node", nil)
 		if server_connection != nil {
-			json_message_for_server, _ := json.Marshal(map[string]interface{}{"action": "Success", "data": "Node's server connection"})
+			json_message_for_server, _ := json.Marshal(map[string]interface{}{"action": "Success", "data": "New websocket connection for node"})
 			server_connection.WriteMessage(websocket.TextMessage, json_message_for_server)
 			Logger.Logger("SUCCESS: Message to server: "+string(json_message_for_server), nil)
 		}

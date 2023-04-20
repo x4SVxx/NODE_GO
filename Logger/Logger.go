@@ -1,7 +1,6 @@
 package Logger
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -13,32 +12,17 @@ import (
 var txt_file_for_logger *os.File
 var txt_file_count = 0
 var time_last_logger_file int64
-var log_enable_flag = ReadAndSetConfig()
+var log_enable_flag string
 
-func ReadAndSetConfig() string {
-	var node_config map[string]interface{}
-	file, _ := os.ReadFile("NodeConfig.json")
-	defer func() {
-		if err := recover(); err != nil {
-			fmt.Println("Error: ", err)
-			os.Exit(0)
-		}
-	}()
-	json.Unmarshal(file, &node_config)
-	log_enable_flag := node_config["log_enable_flag"].(string)
-	if len(strings.TrimSpace(log_enable_flag)) == 0 {
-		fmt.Println("Error: Empry data in NodeConfig")
-		os.Exit(0)
-	}
-	return log_enable_flag
-}
-
-func Logger(map_message string, err interface{}) {
+func Logger(map_message string, err interface{}, flag ...string) {
 	defer func() {
 		if err := recover(); err != nil {
 			fmt.Println("ERROR : LOGGER ", err)
 		}
 	}()
+	if len(flag) > 0 {
+		log_enable_flag = flag[0]
+	}
 	if log_enable_flag == "true" {
 		time_now := time.Now().Unix()
 		if txt_file_count == 0 || time_now-time_last_logger_file > 60*60 {
@@ -49,10 +33,8 @@ func Logger(map_message string, err interface{}) {
 			txt_file_count += 1
 		}
 		txt_file_for_logger.WriteString(map_message + "\n")
-		fmt.Println(map_message)
 		// fmt.Println(runtime.NumGoroutine())
 		if err != nil {
-			fmt.Println(err)
 			func() {
 				defer func() {
 					txt_file_for_logger.WriteString(err.(string) + "\n")
@@ -62,10 +44,8 @@ func Logger(map_message string, err interface{}) {
 
 		}
 	}
-	if log_enable_flag == "false" {
-		fmt.Println(map_message)
-		if err != nil {
-			fmt.Println(err)
-		}
+	fmt.Println(map_message)
+	if err != nil {
+		fmt.Println(err)
 	}
 }

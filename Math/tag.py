@@ -34,65 +34,68 @@ class Tag():
     def add_data(self, msg):
         TAG_STATIC = 0x1
         TAG_SOS = 0x8
+        
+        if 'data' in msg:
+            if 'state' in msg['data']:
 
-        if msg["data"]["state"]:
-            if msg["data"]["state"] & TAG_STATIC:
-                self.static = True
-            else:
-                self.static = False
-
-            if msg["data"]["state"] & TAG_SOS:
-                self.SOS = True
-            else:
-                self.SOS = False
-
-        if time.time() - self.lasttime > 10:
-            self.x_buffer = []
-            self.y_buffer = []
-            self.measurements = []
-            self.SN = -1
-            self.lasttime = time.time()
-        if msg['data']["sn"] != self.SN:
-            delta = msg['data']["sn"] - self.SN
-            if delta < -240:
-                delta += 255
-            if (delta > 0) or self.SN < 0:
-                self.SN = msg['data']["sn"]
-            else:
-                return
-            self.measurements = cl.check_PD(self.measurements, self.cfg)
-            flag = cl.coords_calc_2D(self)
-            if flag:
-                if self.accumulation_mode:
-                    if time.time() - self.lasttime > 1:
-                        self.data2sendflag = 1
-                        self.x_buffer = []
-                        self.y_buffer = []
+                if msg["data"]["state"]:
+                    if msg["data"]["state"] & TAG_STATIC:
+                        self.static = True
                     else:
-                        self.x_buffer.append(self.x)
-                        self.y_buffer.append(self.y)
-                        if len(self.x_buffer) == self.buffer_length:
-                            sorted_x = sorted(self.x_buffer)
-                            sorted_y = sorted(self.y_buffer)
-                            self.x = sorted_x[round(self.buffer_length / 2)]
-                            self.y = sorted_y[round(self.buffer_length / 2)]
+                        self.static = False
+
+                    if msg["data"]["state"] & TAG_SOS:
+                        self.SOS = True
+                    else:
+                        self.SOS = False
+
+                if time.time() - self.lasttime > 10:
+                    self.x_buffer = []
+                    self.y_buffer = []
+                    self.measurements = []
+                    self.SN = -1
+                    self.lasttime = time.time()
+                if msg['data']["sn"] != self.SN:
+                    delta = msg['data']["sn"] - self.SN
+                    if delta < -240:
+                        delta += 255
+                    if (delta > 0) or self.SN < 0:
+                        self.SN = msg['data']["sn"]
+                    else:
+                        return
+                    self.measurements = cl.check_PD(self.measurements, self.cfg)
+                    flag = cl.coords_calc_2D(self)
+                    if flag:
+                        if self.accumulation_mode:
+                            if time.time() - self.lasttime > 1:
+                                self.data2sendflag = 1
+                                self.x_buffer = []
+                                self.y_buffer = []
+                            else:
+                                self.x_buffer.append(self.x)
+                                self.y_buffer.append(self.y)
+                                if len(self.x_buffer) == self.buffer_length:
+                                    sorted_x = sorted(self.x_buffer)
+                                    sorted_y = sorted(self.y_buffer)
+                                    self.x = sorted_x[round(self.buffer_length / 2)]
+                                    self.y = sorted_y[round(self.buffer_length / 2)]
+                                    self.data2sendflag = 1
+                                    self.x_buffer = []
+                                    self.y_buffer = []
+                        else:
                             self.data2sendflag = 1
-                            self.x_buffer = []
-                            self.y_buffer = []
-                else:
-                    self.data2sendflag = 1
 
-                self.lasttime = time.time()
-                self.lifetime = self.lasttime - self.starttime
+                        self.lasttime = time.time()
+                        self.lifetime = self.lasttime - self.starttime
 
-                self.anchors_number_to_solve = len(self.measurements)
+                        self.anchors_number_to_solve = len(self.measurements)
 
-            else:
-                flag = 0
-            if self.cfg.log:
-                self.log_cle_tag(flag)
-            self.measurements = []
-        self.measurements.append(msg)
+                    else:
+                        flag = 0
+                    if self.cfg.log:
+                        self.log_cle_tag(flag)
+                    self.measurements = []
+                self.measurements.append(msg)
 
 
 

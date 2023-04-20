@@ -10,7 +10,9 @@ class Cle():
         self.roomid = msg["data"]["roomid"]
 
         # reference tag
-        self.ref_tag = msg["data"]["ref_tag_config"]
+        if 'data' in msg:
+            if 'ref_tag_config' in msg['data']
+                self.ref_tag = msg["data"]["ref_tag_config"]
         if self.ref_tag:
             self.use_ref_tag = True
         else:
